@@ -55,6 +55,10 @@ class linux_pslist(linux_common.AbstractLinuxCommand):
         linux_common.set_plugin_members(self)
 
         init_task_addr = self.addr_space.profile.get_symbol("init_task")
+        print(f"init_task_addr: {init_task_addr}")
+        print("virtual_shift:  {aspace.profile.virtual_shift}")
+        print("physical_shift:  {aspace.profile.physical_shift}")
+        
         init_task = obj.Object("task_struct", vm = self.addr_space, offset = init_task_addr)
 
         # walk the ->tasks list, note that this will *not* display "swapper"
