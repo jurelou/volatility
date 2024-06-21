@@ -2331,14 +2331,17 @@ class VolatilityDTB(obj.VolatilityMagic):
         tbl    = self.obj_vm.profile.sys_map["kernel"]
         
         if profile.metadata.get('memory_model', '32bit') == "32bit":
+            print("Using swapper_pg_dir")
             sym     = "swapper_pg_dir"
             shifts  = [0xc0000000]
             read_sz = 4
             fmt     = "<I"
         else:
+            print("Using sym init_level4_pgt")
             sym     = "init_level4_pgt"
             # >= 4.13 
             if not sym in tbl:
+                print("Using init_top_pgt")
                 sym = "init_top_pgt"
                 
             shifts  = [0xffffffff80000000, 0xffffffff80000000 - 0x1000000, 0xffffffff7fe00000]       
@@ -2359,15 +2362,22 @@ class VolatilityDTB(obj.VolatilityMagic):
         good_dtb = -1
             
         init_task_addr = tbl["init_task"][0][0] + virtual_shift_address
+        print(f"-- init_task_addr: {init_task_addr - virtual_shift_address} + {virtual_shift_address} = {init_task_addr}")
         dtb_sym_addr   = tbl[sym][0][0] + virtual_shift_address
+        print(f"dtb_sym_addr: {dtb_sym_addr} (with shift)")
+
         files_sym_addr = tbl["init_files"][0][0] + virtual_shift_address
+        print(f"files_sym_addr: {files_sym_addr} (with shift)")
        
         comm_offset   = profile.get_obj_offset("task_struct", "comm")
+        print("Comm offset:", comm_offset)
         pid_offset    = profile.get_obj_offset("task_struct", "pid")
+        print("pid_offset:", pid_offset)
         state_offset  = profile.get_obj_offset("task_struct", "state")
         files_offset  = profile.get_obj_offset("task_struct", "files") 
         mm_offset     = profile.get_obj_offset("task_struct", "active_mm")
-        
+        print("mm_offset:", mm_offset)
+
         # this appeared around 2.6.24, which we only need it for samples with KASLR, which came much later
         try:
             sched_class_offset = profile.get_obj_offset("task_struct", "sched_class")
@@ -2382,8 +2392,10 @@ class VolatilityDTB(obj.VolatilityMagic):
             good_dtb = (dtb_sym_addr - shifts[0] - virtual_shift_address) + physical_shift_address
             self.obj_vm.profile.physical_shift = physical_shift_address 
             self.obj_vm.profile.virtual_shift  = virtual_shift_address
+        print("DTB is at:", good_dtb)
 
         if good_dtb == -1:
+            print("Searching for dtb via swapper")
             for shift in shifts:
                 sym_addr = dtb_sym_addr - shift
            
@@ -2395,9 +2407,9 @@ class VolatilityDTB(obj.VolatilityMagic):
                     if idx == 0:
                         good_dtb = sym_addr
                         break
-
         # check for relocated or physical aslr kernel
         if good_dtb == -1:
+            print("Searching for dtb via swapper 00 00 00 00")
             scanner = swapperScan(needles = ["swapper/0\x00\x00\x00\x00\x00\x00"])
             ctr = 0
             for swapper_offset in scanner.scan(self.obj_vm):
