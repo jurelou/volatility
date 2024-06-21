@@ -38,6 +38,12 @@ class linux_banner(linux_common.AbstractLinuxCommand):
         
         banner_addr = self.addr_space.profile.get_symbol("linux_banner")
         print(f"banner offset: {banner_addr}"
+
+        print(f"type of profile: {type(self.addr_space.profile)}")
+        print(f"type of profile types: {type(self.addr_space.profile.types)}")
+        print(f"dir of profile: {dir(self.addr_space.profile)}")
+        print(f"name of string func: {self.addr_space.profile.types["String"].func.__name__}")
+
         if banner_addr:
             banner = obj.Object("String", offset = banner_addr, vm = self.addr_space, length = 256)
         else:
