@@ -37,7 +37,7 @@ class linux_banner(linux_common.AbstractLinuxCommand):
         linux_common.set_plugin_members(self)
         
         banner_addr = self.addr_space.profile.get_symbol("linux_banner")
-        
+        print(f"banner offset: {banner_addr}"
         if banner_addr:
             banner = obj.Object("String", offset = banner_addr, vm = self.addr_space, length = 256)
         else:
