@@ -56,8 +56,8 @@ class linux_pslist(linux_common.AbstractLinuxCommand):
 
         init_task_addr = self.addr_space.profile.get_symbol("init_task")
         print(f"init_task_addr: {init_task_addr}")
-        print("virtual_shift:  {aspace.profile.virtual_shift}")
-        print("physical_shift:  {aspace.profile.physical_shift}")
+        print(f"virtual_shift:  {self.addr_space.profile.virtual_shift}")
+        print(f"physical_shift:  {self.addr_space.profile.physical_shift}")
         
         init_task = obj.Object("task_struct", vm = self.addr_space, offset = init_task_addr)
 
@@ -110,6 +110,7 @@ class linux_pslist(linux_common.AbstractLinuxCommand):
             dtb = self.addr_space.vtop(task.mm.pgd) or task.mm.pgd
 
         task_offset = None
+        print(f"physical offset of {task.obj_offset} :  {self.addr_space.vtop(task.obj_offset)}")
         if hasattr(self, "wants_physical") and task.obj_vm.base:
             task_offset = self.addr_space.vtop(task.obj_offset)
             
